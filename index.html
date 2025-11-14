@@ -1352,7 +1352,7 @@
       try {
         document.getElementById('loading-progress').textContent = 'Memuat data RTRW...';
         
-        const rtrwResponse = await fetch('data/rtrw.json');
+        const rtrwResponse = await fetch('data/rtrw.geojson');
         if (rtrwResponse.ok) {
           rtrwGeoJSONData = await rtrwResponse.json();
           console.log('✅ RTRW loaded:', rtrwGeoJSONData.features.length, 'features');
@@ -1399,7 +1399,7 @@
         
         document.getElementById('loading-progress').textContent = 'Memuat data RDTR...';
         
-        const rdtrResponse = await fetch('data/rdtr.json');
+        const rdtrResponse = await fetch('data/rdtr.geojson');
         if (rdtrResponse.ok) {
           rdtrGeoJSONData = await rdtrResponse.json();
           console.log('✅ RDTR loaded:', rdtrGeoJSONData.features.length, 'features');
