@@ -1047,12 +1047,6 @@
 
     /* Mobile optimizations */
     @media (max-width: 768px) {
-      body {
-        transform: scale(0.75);
-        transform-origin: top left;
-        width: 133.33%;
-      }
-
       .custom-layer-control, .basemap-control {
         max-width: calc(100vw - 80px);
       }
@@ -2501,6 +2495,17 @@
     console.log('   - data/lsd.geojson');
     console.log('   - data/kelerengan.geojson');
   </script>
-
+  <script>
+  // Auto adjust viewport scale untuk mobile
+  (function() {
+    if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // Untuk mobile, set initial scale ke 0.75
+      var viewport = document.querySelector("meta[name=viewport]");
+      if (viewport) {
+        viewport.content = "width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=no";
+      }
+    }
+  })();
+  </script>
 </body>
 </html>
