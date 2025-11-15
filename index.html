@@ -493,7 +493,7 @@
     }
 
     .layer-control-body.expanded {
-      max-height: 500px;
+      max-height: 600px;
       padding: 10px;
       overflow-y: auto;
     }
@@ -849,6 +849,14 @@
       background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
     }
 
+    .popup-header.sawah {
+      background: linear-gradient(135deg, #8BC34A 0%, #CDDC39 100%);
+    }
+
+    .popup-header.kelerengan {
+      background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
+    }
+
     .popup-body {
       padding: 12px;
       overflow-y: auto;
@@ -956,6 +964,14 @@
 
     .popup-section-title.persil {
       background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .popup-section-title.sawah {
+      background: linear-gradient(135deg, #8BC34A 0%, #CDDC39 100%);
+    }
+
+    .popup-section-title.kelerengan {
+      background: linear-gradient(135deg, #FF9800 0%, #FF5722 100%);
     }
 
     .feature-navigation {
@@ -1073,6 +1089,10 @@
       .leaflet-control-locate a {
         width: 36px;
         height: 36px;
+      }
+
+      .layer-control-body.expanded {
+        max-height: 400px;
       }
     }
 
@@ -1194,6 +1214,8 @@
     let isRTRWLayerActive = false;
     let isRDTRLayerActive = false;
     let isHutanLayerActive = false;
+    let isSawahLayerActive = false;
+    let isKelerenganLayerActive = false;
 
     let highlightLayer = null;
     let currentPersilFeatures = [];
@@ -1210,8 +1232,13 @@
 
     let rtrwLayerGroup = L.layerGroup();
     let rdtrLayerGroup = L.layerGroup();
+    let sawahLayerGroup = L.layerGroup();
+    let kelerenganLayerGroup = L.layerGroup();
+    
     let rtrwGeoJSONData = null;
     let rdtrGeoJSONData = null;
+    let sawahGeoJSONData = null;
+    let kelerenganGeoJSONData = null;
 
     // ========== FUNGSI POPUP RTRW ==========
     function showRTRWPopup(feature, latlng) {
@@ -1345,13 +1372,150 @@
       if (highlightLayer.setZIndex) highlightLayer.setZIndex(999);
     }
 
+    // ========== FUNGSI POPUP SAWAH ==========
+    function showSawahPopup(feature, latlng) {
+      const props = feature.properties;
+      
+      let content = `
+        <div class="popup-header sawah">
+          <span>🌾 Lahan Sawah Dilindungi</span>
+          <span class="close-btn" onclick="closeCurrentPopup()">✕</span>
+        </div>
+        <div class="popup-body">
+          <div class="popup-section">
+            <div class="popup-section-title sawah">🌾 Informasi Lahan Sawah Dilindungi</div>
+      `;
+      
+      for (let key in props) {
+        if (props[key] !== null && props[key] !== '') {
+          const label = key.replace(/_/g, ' ').toUpperCase();
+          let value = props[key];
+          
+          if ((key.toLowerCase().includes('luas') || key.toLowerCase().includes('area')) && !isNaN(value)) {
+            value = parseFloat(value).toLocaleString('id-ID', {minimumFractionDigits: 2}) + ' Ha';
+          }
+          
+          content += `
+            <div class="popup-row">
+              <span class="popup-label">${label}:</span>
+              <span class="popup-value">${value}</span>
+            </div>
+          `;
+        }
+      }
+      
+      content += `
+          </div>
+          <div class="popup-row" style="border-top: 2px solid #ddd; margin-top: 10px; padding-top: 8px;">
+            <span class="popup-label">📍 Koordinat:</span>
+            <span class="popup-value">${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</span>
+          </div>
+        </div>
+      `;
+      
+      currentPopup = L.popup({
+        className: 'custom-popup',
+        maxWidth: isMobile ? window.innerWidth - 20 : 450,
+        minWidth: isMobile ? 260 : 300,
+        closeButton: false,
+        autoPan: true,
+        autoPanPadding: [10, 10]
+      })
+      .setLatLng(latlng)
+      .setContent(content)
+      .openOn(map);
+
+      if (highlightLayer) map.removeLayer(highlightLayer);
+      highlightLayer = L.geoJSON(feature, {
+        style: {
+          fillColor: 'transparent',
+          color: '#ff0000',
+          weight: 4,
+          opacity: 1,
+          dashArray: '10, 5'
+        }
+      }).addTo(map);
+      if (highlightLayer.setZIndex) highlightLayer.setZIndex(999);
+    }
+
+    // ========== FUNGSI POPUP KELERENGAN ==========
+    function showKelerenganPopup(feature, latlng) {
+      const props = feature.properties;
+      
+      let content = `
+        <div class="popup-header kelerengan">
+          <span>⛰️ Kelerengan</span>
+          <span class="close-btn" onclick="closeCurrentPopup()">✕</span>
+        </div>
+        <div class="popup-body">
+          <div class="popup-section">
+            <div class="popup-section-title kelerengan">⛰️ Informasi Kelerengan</div>
+      `;
+      
+      for (let key in props) {
+        if (props[key] !== null && props[key] !== '') {
+          const label = key.replace(/_/g, ' ').toUpperCase();
+          let value = props[key];
+          
+          if (key.toLowerCase().includes('kelerengan') || key.toLowerCase().includes('slope')) {
+            value = value + ' %';
+          }
+          
+          if ((key.toLowerCase().includes('luas') || key.toLowerCase().includes('area')) && !isNaN(value)) {
+            value = parseFloat(value).toLocaleString('id-ID', {minimumFractionDigits: 2}) + ' Ha';
+          }
+          
+          content += `
+            <div class="popup-row">
+              <span class="popup-label">${label}:</span>
+              <span class="popup-value">${value}</span>
+            </div>
+          `;
+        }
+      }
+      
+      content += `
+          </div>
+          <div class="popup-row" style="border-top: 2px solid #ddd; margin-top: 10px; padding-top: 8px;">
+            <span class="popup-label">📍 Koordinat:</span>
+            <span class="popup-value">${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}</span>
+          </div>
+        </div>
+      `;
+      
+      currentPopup = L.popup({
+        className: 'custom-popup',
+        maxWidth: isMobile ? window.innerWidth - 20 : 450,
+        minWidth: isMobile ? 260 : 300,
+        closeButton: false,
+        autoPan: true,
+        autoPanPadding: [10, 10]
+      })
+      .setLatLng(latlng)
+      .setContent(content)
+      .openOn(map);
+
+      if (highlightLayer) map.removeLayer(highlightLayer);
+      highlightLayer = L.geoJSON(feature, {
+        style: {
+          fillColor: 'transparent',
+          color: '#ff0000',
+          weight: 4,
+          opacity: 1,
+          dashArray: '10, 5'
+        }
+      }).addTo(map);
+      if (highlightLayer.setZIndex) highlightLayer.setZIndex(999);
+    }
+
     // ========== LOAD GEOJSON ==========
     async function loadGeoJSONData() {
-    const startTime = Date.now();
-    const minimumDisplayTime = 5000; // ← UBAH INI JADI 5000 untuk 5 detik
+      const startTime = Date.now();
+      const minimumDisplayTime = 5000;
+      
       try {
+        // Load RTRW
         document.getElementById('loading-progress').textContent = 'Memuat data RTRW...';
-        
         const rtrwResponse = await fetch('data/rtrw.geojson');
         if (rtrwResponse.ok) {
           rtrwGeoJSONData = await rtrwResponse.json();
@@ -1397,8 +1561,8 @@
           }).addTo(rtrwLayerGroup);
         }
         
+        // Load RDTR
         document.getElementById('loading-progress').textContent = 'Memuat data RDTR...';
-        
         const rdtrResponse = await fetch('data/rdtr.geojson');
         if (rdtrResponse.ok) {
           rdtrGeoJSONData = await rdtrResponse.json();
@@ -1443,35 +1607,125 @@
             }
           }).addTo(rdtrLayerGroup);
         }
+
+        // Load Lahan Sawah Dilindungi
+        document.getElementById('loading-progress').textContent = 'Memuat data Lahan Sawah Dilindungi...';
+        const sawahResponse = await fetch('data/lsd.geojson');
+        if (sawahResponse.ok) {
+          sawahGeoJSONData = await sawahResponse.json();
+          console.log('✅ Lahan Sawah Dilindungi loaded:', sawahGeoJSONData.features.length, 'features');
+          
+          L.geoJSON(sawahGeoJSONData, {
+            style: function(feature) {
+              return {
+                fillColor: '#8BC34A',
+                weight: 1,
+                opacity: 1,
+                color: '#689F38',
+                fillOpacity: 0.6
+              };
+            },
+            onEachFeature: function(feature, layer) {
+              layer.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                closeCurrentPopup();
+                showSawahPopup(feature, e.latlng);
+              });
+
+              layer.on('mouseover', function(e) {
+                if (isSawahLayerActive) {
+                  layer.setStyle({
+                    weight: 3,
+                    color: '#33691E',
+                    fillOpacity: 0.8
+                  });
+                }
+              });
+
+              layer.on('mouseout', function(e) {
+                if (isSawahLayerActive && (!currentPopup || currentPopup._source !== layer)) {
+                  layer.setStyle({
+                    weight: 1,
+                    color: '#689F38',
+                    fillOpacity: 0.6
+                  });
+                }
+              });
+            }
+          }).addTo(sawahLayerGroup);
+        }
+
+        // Load Kelerengan
+        document.getElementById('loading-progress').textContent = 'Memuat data Kelerengan...';
+        const kelerenganResponse = await fetch('data/kelerengan.geojson');
+        if (kelerenganResponse.ok) {
+          kelerenganGeoJSONData = await kelerenganResponse.json();
+          console.log('✅ Kelerengan loaded:', kelerenganGeoJSONData.features.length, 'features');
+          
+          L.geoJSON(kelerenganGeoJSONData, {
+            style: function(feature) {
+              return {
+                fillColor: feature.properties.warna || '#bdc3c7',
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                fillOpacity: 0.6
+              };
+            },
+            
+            onEachFeature: function(feature, layer) {
+              layer.on('click', function(e) {
+                L.DomEvent.stopPropagation(e);
+                closeCurrentPopup();
+                showKelerenganPopup(feature, e.latlng);
+              });
+
+              layer.on('mouseover', function(e) {
+                if (isKelerenganLayerActive) {
+                  layer.setStyle({
+                    weight: 3,
+                    color: '#3E2723',
+                    fillOpacity: 0.8
+                  });
+                }
+              });
+
+              layer.on('mouseout', function(e) {
+                if (isKelerenganLayerActive && (!currentPopup || currentPopup._source !== layer)) {
+                  layer.setStyle({
+                    weight: 1,
+                    color: '#795548',
+                    fillOpacity: 0.6
+                  });
+                }
+              });
+            }
+          }).addTo(kelerenganLayerGroup);
+        }
         
         document.getElementById('loading-progress').textContent = 'Menyelesaikan...';
         
-        // Hitung waktu yang sudah berlalu
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minimumDisplayTime - elapsedTime);
         
-        // Tunggu minimal 3 detik total sebelum hide
         setTimeout(() => {
-        document.getElementById('loading-progress').textContent = 'Selesai! Selamat datang 🎉';
-        
-        // Fade out animation
-        const overlay = document.getElementById('loading-overlay');
-        overlay.classList.add('fade-out');
-        
-        // Remove dari DOM setelah animasi selesai
-        setTimeout(() => {
+          document.getElementById('loading-progress').textContent = 'Selesai! Selamat datang 🎉';
+          
+          const overlay = document.getElementById('loading-overlay');
+          overlay.classList.add('fade-out');
+          
+          setTimeout(() => {
             overlay.classList.add('hidden');
-        }, 600); // Sesuai dengan durasi fade-out
-        
+          }, 600);
         }, remainingTime);
         
-        } catch (error) {
-            console.error('Error loading GeoJSON:', error);
-            document.getElementById('loading-progress').textContent = 'Error: ' + error.message;
-            setTimeout(() => {
-            document.getElementById('loading-overlay').classList.add('hidden');
-            }, 2000);
-        }
+      } catch (error) {
+        console.error('Error loading GeoJSON:', error);
+        document.getElementById('loading-progress').textContent = 'Error: ' + error.message;
+        setTimeout(() => {
+          document.getElementById('loading-overlay').classList.add('hidden');
+        }, 2000);
+      }
     }
 
     loadGeoJSONData();
@@ -1698,6 +1952,34 @@
               </div>
             </div>
 
+            <div class="layer-item" id="layer-sawah">
+              <div class="layer-item-header" onclick="toggleLayer('sawah')">
+                <input type="checkbox" class="layer-checkbox" id="check-sawah" onchange="toggleLayer('sawah')">
+                <span class="layer-name">🌾 Lahan Sawah Dilindungi</span>
+              </div>
+              <div class="layer-opacity">
+                <div class="opacity-slider-container">
+                  <label>Opacity:</label>
+                  <input type="range" id="opacity-sawah" min="0" max="100" value="60">
+                  <span class="opacity-value" id="value-sawah">60%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="layer-item" id="layer-kelerengan">
+              <div class="layer-item-header" onclick="toggleLayer('kelerengan')">
+                <input type="checkbox" class="layer-checkbox" id="check-kelerengan" onchange="toggleLayer('kelerengan')">
+                <span class="layer-name">⛰️ Kelerengan</span>
+              </div>
+              <div class="layer-opacity">
+                <div class="opacity-slider-container">
+                  <label>Opacity:</label>
+                  <input type="range" id="opacity-kelerengan" min="0" max="100" value="60">
+                  <span class="opacity-value" id="value-kelerengan">60%</span>
+                </div>
+              </div>
+            </div>
+
           </div>
         `;
         L.DomEvent.disableClickPropagation(container);
@@ -1800,6 +2082,7 @@
           isRTRWLayerActive = isActive;
           if (isActive) {
             map.addLayer(rtrwLayerGroup);
+            rtrwLayerGroup.setZIndex(11);
           } else {
             map.removeLayer(rtrwLayerGroup);
           }
@@ -1808,6 +2091,7 @@
           isRDTRLayerActive = isActive;
           if (isActive) {
             map.addLayer(rdtrLayerGroup);
+            rdtrLayerGroup.setZIndex(12);
           } else {
             map.removeLayer(rdtrLayerGroup);
           }
@@ -1819,6 +2103,24 @@
             hutanLayer.setZIndex(13);
           } else {
             map.removeLayer(hutanLayer);
+          }
+          break;
+        case 'sawah':
+          isSawahLayerActive = isActive;
+          if (isActive) {
+            map.addLayer(sawahLayerGroup);
+            sawahLayerGroup.setZIndex(14);
+          } else {
+            map.removeLayer(sawahLayerGroup);
+          }
+          break;
+        case 'kelerengan':
+          isKelerenganLayerActive = isActive;
+          if (isActive) {
+            map.addLayer(kelerenganLayerGroup);
+            kelerenganLayerGroup.setZIndex(15);
+          } else {
+            map.removeLayer(kelerenganLayerGroup);
           }
           break;
       }
@@ -1857,6 +2159,26 @@
         const value = e.target.value;
         hutanLayer.setOpacity(value / 100);
         document.getElementById('value-hutan').textContent = value + '%';
+      });
+
+      document.getElementById('opacity-sawah').addEventListener('input', function(e) {
+        const value = e.target.value;
+        sawahLayerGroup.eachLayer(function(layer) {
+          if (layer.setStyle) {
+            layer.setStyle({ fillOpacity: value / 100 });
+          }
+        });
+        document.getElementById('value-sawah').textContent = value + '%';
+      });
+
+      document.getElementById('opacity-kelerengan').addEventListener('input', function(e) {
+        const value = e.target.value;
+        kelerenganLayerGroup.eachLayer(function(layer) {
+          if (layer.setStyle) {
+            layer.setStyle({ fillOpacity: value / 100 });
+          }
+        });
+        document.getElementById('value-kelerengan').textContent = value + '%';
       });
     }, 100);
 
@@ -2042,7 +2364,7 @@
     }
 
     function updateMapCursor() {
-      if (isBhumiLayerActive || isRTRWLayerActive || isRDTRLayerActive || isHutanLayerActive) {
+      if (isBhumiLayerActive || isRTRWLayerActive || isRDTRLayerActive || isHutanLayerActive || isSawahLayerActive || isKelerenganLayerActive) {
         document.getElementById('map').classList.add('clickable');
       } else {
         document.getElementById('map').classList.remove('clickable');
@@ -2141,7 +2463,7 @@
         <strong>📊 Info Peta</strong>
         <div class="info-item">📍 <span id="coords">-</span></div>
         <div class="info-item">🔍 Zoom: <span id="zoom-level">${map.getZoom()}</span></div>
-        <div class="info-item" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #ddd;">💡 Klik peta untuk info RTR</div>
+        <div class="info-item" style="margin-top: 4px; padding-top: 4px; border-top: 1px solid #ddd;">💡 Klik peta untuk info detail</div>
       `;
       return div;
     };
@@ -2162,7 +2484,12 @@
     updateMapCursor();
 
     console.log('🗺️ Peta berhasil dimuat!');
-    console.log('✅ RTRW & RDTR GeoJSON dengan popup aktif!');
+    console.log('✅ RTRW, RDTR, Lahan Sawah Dilindungi & Kelerengan dari GeoJSON lokal!');
+    console.log('📁 Pastikan file berikut ada:');
+    console.log('   - data/rtrw.geojson');
+    console.log('   - data/rdtr.geojson');
+    console.log('   - data/lsd.geojson');
+    console.log('   - data/kelerengan.geojson');
   </script>
 
 </body>
