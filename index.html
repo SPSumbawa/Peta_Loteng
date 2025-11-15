@@ -115,7 +115,7 @@
     }
 
     .splash-subtitle {
-    font-size: 16px;
+    font-size: 24px;
     font-weight: 400;
     margin-bottom: 40px;
     opacity: 0.95;
@@ -1158,20 +1158,26 @@
     
     <!-- Logo -->
     <div class="splash-logo">
-        <div class="splash-icon">🗺️</div>
+        <div class="splash-icon">
+          <img src="img/logo-bpn.png" alt="Logo BPN" style="width: 300px; height: auto;">
+        </div>
     </div>
 
     <!-- Title -->
-    <div class="splash-title">Peta RTRW & RDTR</div>
-    <div class="splash-subtitle">Kabupaten Lombok Tengah</div>
+    <div class="splash-title">Peta Interaktif Seksi Penataan dan Pemberdayaan</div>
+    <div class="splash-subtitle">Kantor Pertanahan Kabupaten Lombok Tengah</div>
 
-    <!-- Credits Box -->
-    <div class="splash-credits">
-        <div class="credits-label">💻 Dikembangkan Oleh</div>
-        <div class="credits-names">
-        <div class="creator-name"> Alip Pangestu</div>
-        <div class="creator-name"> Unsila Tammiya Artawan</div>
-        </div>
+    <div id="credit-map" style="
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0);
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 16px;
+      z-index: 9999;
+    ">
+      © Dikembangkan oleh: Alip Pangestu & Unsila Tammiya Artawan
     </div>
 
     <!-- Loading Spinner -->
@@ -1704,11 +1710,9 @@
         }
         
         document.getElementById('loading-progress').textContent = 'Menyelesaikan...';
-        
         const elapsedTime = Date.now() - startTime;
         const remainingTime = Math.max(0, minimumDisplayTime - elapsedTime);
-        
-        setTimeout(() => {
+                setTimeout(() => {
           document.getElementById('loading-progress').textContent = 'Selesai! Selamat datang 🎉';
           
           const overlay = document.getElementById('loading-overlay');
@@ -2494,4 +2498,3 @@
 
 </body>
 </html>
-
